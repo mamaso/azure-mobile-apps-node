@@ -146,6 +146,15 @@ var helpers = module.exports = {
         }
     },
 
+    getSystemPropertyColumns: function () {
+        return [
+            { name: 'version', type: 'ROWVERSION', sql: 'version ROWVERSION NOT NULL' },
+            { name: 'createdAt', type: 'DATETIMEOFFSET(7)', sql: 'createdAt DATETIMEOFFSET(7) NOT NULL DEFAULT CONVERT(DATETIMEOFFSET(7),SYSUTCDATETIME(),0)' },
+            { name: 'updatedAt', type: 'DATETIMEOFFSET(7)', sql: 'updatedAt DATETIMEOFFSET(7) NOT NULL DEFAULT CONVERT(DATETIMEOFFSET(7),SYSUTCDATETIME(),0)' },
+            { name: 'deleted', type: 'BIT', sql: 'deleted BIT NOT NULL DEFAULT 0' }
+        ];
+    },
+
     getSystemProperties: function () {
         return Object.keys(helpers.getSystemPropertiesDDL());
     },

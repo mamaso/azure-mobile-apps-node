@@ -8,7 +8,8 @@ module.exports = function (configuration) {
         dynamicSchema = require('./dynamicSchema'),
         promises = require('../../utilities/promises'),
         log = require('../../logger'),
-        helpers = require('./helpers');
+        helpers = require('./helpers'),
+        columnCache = require('./columnDefinitionCache')(configuration);
 
     var api = {
         initialize: function (table) {
@@ -41,9 +42,9 @@ module.exports = function (configuration) {
 
         updateSchema: function(table, item) {
             log.info('Updating schema for table ' + table.name);
-            return execute(configuration, statements.getColumns(table))
-                .then(function (columns) {
-                    return execute(configuration, statements.updateSchema(table, columns, item));
+            return columnCache.update(table, item)
+                .then(function (definitions) {
+                    return execute(configuration, statements.updateSchema(table, definitions.existing, definitions.all));
                 })
                 .then(function () {
                     return api.createIndexes(table);
@@ -76,16 +77,17 @@ module.exports = function (configuration) {
         },
 
         get: function (table) {
-            return execute(configuration, statements.getColumns(table)).then(function (columns) {
-                return {
-                    name: table.name,
-                    properties: columns.map(function (column) {
-                        return {
-                            name: column.name,
-                            type: helpers.getPredefinedType(column.type)
-                        };
-                    })
-                };
+            return columnCache.get(table)
+                .then(function (columns) {
+                    return {
+                        name: table.name,
+                        properties: columns.map(function (column) {
+                            return {
+                                name: column.name,
+                                type: helpers.getPredefinedType(column.type)
+                            };
+                        })
+                    };
             });
         }
     };
