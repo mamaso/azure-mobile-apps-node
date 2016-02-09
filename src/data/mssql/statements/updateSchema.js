@@ -3,9 +3,11 @@
 // ----------------------------------------------------------------------------
 var helpers = require('../helpers');
 
-module.exports = function (tableConfig, databaseColumns, updatedColumns) {
+module.exports = function (tableConfig, columns) {
     var tableName = helpers.formatTableName(tableConfig.schema || 'dbo', tableConfig.name),
-        newColumns = newColumnSql();
+        newColumns = columns.map(function (column) {
+            return column.sql || '[' + column.name + '] ' + column.type + ' NULL';
+        });
 
     if(newColumns.length > 0)
         return {
@@ -13,14 +15,4 @@ module.exports = function (tableConfig, databaseColumns, updatedColumns) {
         };
     else
         return { noop: true };
-
-    function newColumnSql() {
-        return updatedColumns.reduce(function (sql, column) {
-            if(!databaseColumns.some(function (existing) { return existing.name.toLowerCase() === column.name.toLowerCase() })) {
-                databaseColumns.push(column);
-                sql.push(column.sql || '[' + column.name + '] ' + column.type + ' NULL');
-            }
-            return sql;
-        }, []);
-    }
 };

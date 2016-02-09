@@ -13,13 +13,13 @@ describe('azure-mobile-apps.data.sql.statements', function () {
         var updateSchema = statements.updateSchema;
 
         it('generates simple statement', function () {
-            var statement = updateSchema({ name: 'table' }, [], [{ name: 'text', type: 'NVARCHAR(MAX)' }]);
+            var statement = updateSchema({ name: 'table' }, [{ name: 'text', type: 'NVARCHAR(MAX)' }]);
             expect(statement.sql).to.equal('ALTER TABLE [dbo].[table] ADD [text] NVARCHAR(MAX) NULL');
         });
 
-        it('generates diff between existing and desired columns', function () {
-            var statement = updateSchema({ name: 'table' }, [{ name: 'id' }], [{ name: 'id' }, { name: 'text', type: 'NVARCHAR(MAX)' }]);
-            expect(statement.sql).to.equal('ALTER TABLE [dbo].[table] ADD [text] NVARCHAR(MAX) NULL');
+        it('uses column sql property if exists', function () {
+            var statement = updateSchema({ name: 'table' }, [{ name: 'text', type: 'NVARCHAR(MAX)', sql: '[text] NVARCHAR(15) NOT NULL' }]);
+            expect(statement.sql).to.equal('ALTER TABLE [dbo].[table] ADD [text] NVARCHAR(15) NOT NULL');
         });
     });
 });

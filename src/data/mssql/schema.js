@@ -42,9 +42,9 @@ module.exports = function (configuration) {
 
         updateSchema: function(table, item) {
             log.info('Updating schema for table ' + table.name);
-            return columnCache.update(table, item)
-                .then(function (definitions) {
-                    return execute(configuration, statements.updateSchema(table, definitions.existing, definitions.all));
+            return columnCache.getMissingColumns(table, item)
+                .then(function (missingColumns) {
+                    return execute(configuration, statements.updateSchema(table, missingColumns));
                 })
                 .then(function () {
                     return api.createIndexes(table);

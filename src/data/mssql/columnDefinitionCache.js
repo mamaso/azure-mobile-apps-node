@@ -7,30 +7,37 @@ module.exports = function (configuration) {
     var columnCache = {};
 
     var api = {
-         update: function (table, item) {
+         getMissingColumns: function (table, item) {
             return execute(configuration, statements.getColumns(table))
                 .then(function (databaseColumns) {
                     columnCache[table.name] = columnDefinitions(table, databaseColumns, item);
-                    return {
-                        all: columnCache[table.name],
-                        existing: databaseColumns
-                    };
+                    return diffColumns(columnCache[table.name], databaseColumns);
                 });
         },
-
+        
         get: function (table) {
             if (columnCache[table.name]) {
                 return promises.resolved(columnCache[table.name]);
             } else {
-                return api.update(table)
-                    .then(function (definitions) {
-                        return definitions.all;
+                return api.getMissingColumns(table)
+                    .then(function () {
+                        return columnCache[table.name];
                     });
             }
         }
     };
 
     return api;
+}
+
+function diffColumns(all, database) {
+    return all.reduce(function (diff, column) {
+        if(!database.some(function (dbColumn) { return column.name.toLowerCase() === dbColumn.name.toLowerCase() })) {
+            database.push(column);
+            diff.push(column);
+        }
+        return diff;
+    }, []);
 }
 
 function columnDefinitions(tableConfig, existingColumns, item) {
